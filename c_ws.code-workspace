@@ -5,6 +5,10 @@
 		}
 	],
 	"settings": {
-		"C_Cpp.errorSquiggles": "Enabled"
+		"C_Cpp.errorSquiggles": "Enabled",
+		"files.associations": {
+			"condition_variable": "cpp",
+			"thread": "cpp"
+		}
 	}
 }
