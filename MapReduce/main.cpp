@@ -9,13 +9,13 @@ using namespace std;
 #define v 1 /* verbose flag, output if 1, \
                           no output if 0 */
 
-typedef struct
+struct jobqueue
 {
     int id;       /* identification label */
     int nb;       /* number of jobs */
     int *nextjob; /* index of next job */
     int *work;    /* array of nb jobs */
-} jobqueue;
+};
 
 jobqueue *make_jobqueue(int n);
 /* 
