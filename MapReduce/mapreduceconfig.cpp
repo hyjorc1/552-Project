@@ -1,8 +1,9 @@
 #include "mapreduceconfig.h"
+#include <stdio.h>
 #include <vector>
 using namespace std;
 
-MapReduceConfig::MapReduceConfig(void *data, int numberOfChunks, int poolSize, int (*mapper)(void), int (*reducer)(void))
+MapReduceConfig::MapReduceConfig(void *data, int numberOfChunks, int poolSize, int (*mapper)(int), int (*reducer)(int, int))
 {
     this->_data = *(vector<int> *)data;
     this->_numberOfChunks = numberOfChunks;
@@ -27,13 +28,15 @@ vector<vector<int>> MapReduceConfig::getChuckRanges(vector<int> data, int number
     int residue = data.size() - numberOfChunks * chunkSize;
     int start;
     int end;
+    int head = 0;
     for (int i = 0; i < numberOfChunks - 1; i++)
     {
-        start = chunkSize * i;
+        start = chunkSize * i + head;
         if (residue > 0)
         {
             end = start + chunkSize;
             residue--;
+            head++;
         }
         else
         {
@@ -42,7 +45,7 @@ vector<vector<int>> MapReduceConfig::getChuckRanges(vector<int> data, int number
         vector<int> vect{start, end};
         chunks.push_back(vect);
     }
-    vector<int> last{(numberOfChunks - 1) * chunkSize, (int)(data.size() - 1)};
+    vector<int> last{(numberOfChunks - 1) * chunkSize + head, (int)(data.size() - 1)};
     chunks.push_back(last);
     return chunks;
 };
