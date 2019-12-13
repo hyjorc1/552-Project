@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
     scanf("%d", &dataSize);
 
     printf("How many chunks? ");
-    int numberOfChunks;
-    scanf("%d", &numberOfChunks);
+    int nchunks;
+    scanf("%d", &nchunks);
 
     printf("How many threads ? ");
     int nthreads;
@@ -37,9 +37,11 @@ int main(int argc, char *argv[])
     vector<int> data;
     for( int i = 1; i <= dataSize; i++ )
         data.push_back(i);
-    MR mr(&data, numberOfChunks, nthreads, mapper, reducer);
-    vector<int> result = mr.RunMapReduce();
-    printf("done %d tasks with result %d\n", result[0], result[1]);
+
+
+    MR<int, int> mr(&data, nchunks, nthreads, mapper, reducer);
+    mr.RunMapReduce();
+    
 
     return 0;
 }
