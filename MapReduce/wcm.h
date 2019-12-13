@@ -1,16 +1,18 @@
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 #include <pthread.h>
 #include <vector>
+#include <string>
 using namespace std;
 
 #define debug 1 // debug mode if 1, otherwise 0
 
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t task_lock = PTHREAD_MUTEX_INITIALIZER;
 
-template <class T, class U>
+template <typename T, typename U>
 class WCM
 {
 
@@ -90,7 +92,7 @@ void *WCM<T, U>::work(void *args)
         // assign current task and update next task
         if (debug > 0)
             printf("thread %d requests lock ...\n", q->id);
-        pthread_mutex_lock(&lock);
+        pthread_mutex_lock(&task_lock);
         if (debug > 0)
             printf("thread %d gets lock ...\n", q->id);
         int *j = q->nextTask;
@@ -99,8 +101,8 @@ void *WCM<T, U>::work(void *args)
         if (debug > 0)
             printf("thread %d the next job is %d ...\n", q->id, curChunkIdx);
         if (debug > 0)
-            printf("thread %d releases lock\n", q->id);
-        pthread_mutex_unlock(&lock);
+            printf("thread %d releases lock ...\n", q->id);
+        pthread_mutex_unlock(&task_lock);
 
         if (curChunkIdx == -1) // check if all tasks are done
             break;
@@ -129,22 +131,25 @@ void WCM<T, U>::chunksMapreduce(TaskQueue *q, int curChunkIdx)
     U(*reducer)
     (U, U) = q->reducer;
     int i;
-    int prevResult = -1;
+    U prevResult;
     for (i = chunkRange[0]; i <= chunkRange[1]; i++)
     {
         T e = data[i];
+
+        if (debug > 0)
+            printf("thread %d is working on data point at idx %d with value %s ...\n", q->id, i, toString(e).c_str());
+
         U curResult = mapper(e);
         prevResult = i == chunkRange[0] ? curResult : reducer(prevResult, curResult);
-        if (debug > 0)
-            printf("thread %d is working on data at idx %d with value %d\n", q->id, i, e);
     }
 
     if (debug > 0)
-        printf("thread %d done with chunk at idx %d with result %d\n", q->id, curChunkIdx, prevResult);
-    pthread_mutex_lock(&lock);
+        printf("thread %d done with chunk at idx %d with result %s ...\n", q->id, curChunkIdx, toString(prevResult).c_str());
+
+    pthread_mutex_lock(&task_lock);
     int tmp = (*(q->results)).size();
     (*(q->results)).at(curChunkIdx) = prevResult;
-    pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&task_lock);
 };
 
 template <class T, class U>
@@ -184,7 +189,7 @@ U WCM<T, U>::processMultiThreads(TaskQueue *tasks, int n)
         U curResult = finalResults[i];
         prevResult = i == 0 ? curResult : reducer(prevResult, curResult);
     }
-    printf("done %d tasks\n", *(tasks->nextTask));
+    printf("Done %d tasks\n", *(tasks->nextTask));
     return prevResult;
 };
 

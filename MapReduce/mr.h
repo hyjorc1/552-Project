@@ -1,18 +1,18 @@
 #include "wcm.h"
-#include <stdio.h>
-#include <vector>
 using namespace std;
 
-template <class T, class U>
+template <typename T, typename U>
 class MR
 {
 
 private:
-    std::vector<int> *_data;
+    std::vector<T> *_data;
     int _numberOfChunks;
     int _nthreads;
-    U (*_mapper)(T);
-    U (*_reducer)(U, U);
+    U (*_mapper)
+    (T);
+    U (*_reducer)
+    (U, U);
 
 public:
     MR(std::vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), U (*reducer)(U, U));
@@ -33,18 +33,20 @@ MR<T, U>::MR(vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), 
 };
 
 template <class T, class U>
-U MR<T, U>::RunMapReduce() {
+U MR<T, U>::RunMapReduce()
+{
     vector<vector<int>> chunkRanges = getChuckRanges((*_data).size(), _numberOfChunks);
     vector<U> results(chunkRanges.size());
     vector<U> *resPtr = &results;
     WCM<T, U> wcm(_data, &chunkRanges, _nthreads, resPtr, _mapper, _reducer);
     U result = wcm.process();
-    printf("Final result %d\n", result);
+    printf("Final Result: %s\n", toString(result).c_str());
     return result;
 };
 
 template <class T, class U>
-vector<vector<int>> MR<T, U>::getChuckRanges(int dataSize, int numberOfChunks) {
+vector<vector<int>> MR<T, U>::getChuckRanges(int dataSize, int numberOfChunks)
+{
     vector<vector<int>> chunks;
     int chunkSize = dataSize / numberOfChunks;
     int residue = dataSize - numberOfChunks * chunkSize;

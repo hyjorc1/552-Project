@@ -1,24 +1,12 @@
 #include "mr.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <time.h>
-#include <pthread.h>
-using namespace std;
-
-int MyMapper(int x)
-{
-    usleep(1e3);
-    return (x * 2);
-};
-
-int MyReducer(int p, int c)
-{
-    return p + c;
-};
+#include "demo.h"
 
 int main(int argc, char *argv[])
 {
+    printf("Which test? ");
+    int testNum;
+    scanf("%d", &testNum);
+
     printf("Data size? ");
     int dataSize;
     scanf("%d", &dataSize);
@@ -27,23 +15,31 @@ int main(int argc, char *argv[])
     int nchunks;
     scanf("%d", &nchunks);
 
-    printf("How many threads ? ");
+    printf("How many threads? ");
     int nthreads;
     scanf("%d", &nthreads);
 
-    int (*mapper)(int) = MyMapper;
-    int (*reducer)(int, int) = MyReducer;
-
-    vector<int> data;
-    for( int i = 1; i <= dataSize; i++ )
-        data.push_back(i);
-
-
-    MR<int, int> mr(&data, nchunks, nthreads, mapper, reducer);
-    mr.RunMapReduce();
-    
+    if (testNum == 1)
+    {
+         // test 1 int
+        vector<int> data = generateData(dataSize, 1);
+        MR<int, int> mr(&data, nchunks, nthreads, timesTwo, sum);
+        mr.RunMapReduce();
+    }
+    else if (testNum == 2)
+    {
+         // test 2 double
+        vector<double> data = generateData(dataSize, 1.0);
+        MR<double, double> mr(&data, nchunks, nthreads, timesThree, sum);
+        mr.RunMapReduce();
+    }
+    else
+    {
+         // test 3 string
+        vector<string> data = generateStringData(dataSize);
+        MR<string, int> mr(&data, nchunks, nthreads, len, max);
+        mr.RunMapReduce();
+    }
 
     return 0;
 }
-
-
