@@ -1,28 +1,27 @@
-#include "mapreduceconfig.h"
+#include "mr.h"
+#include "wcm.h"
 #include <stdio.h>
 #include <vector>
 using namespace std;
 
-MapReduceConfig::MapReduceConfig(void *data, int numberOfChunks, int poolSize, int (*mapper)(int), int (*reducer)(int, int))
+MR::MR(void *data, int numberOfChunks, int nthreads, int (*mapper)(int), int (*reducer)(int, int))
 {
-    this->_data = *(vector<int> *)data;
+    this->_data = (vector<int> *)data;
     this->_numberOfChunks = numberOfChunks;
-    this->_poolSize = poolSize;
+    this->_nthreads = nthreads;
     this->_mapper = mapper;
     this->_reducer = reducer;
 };
 
-MapReduceConfig::MapReduceConfig()
-{
-
+vector<int> MR::RunMapReduce() {
+    vector<vector<int>> chunkRanges = getChuckRanges(*_data, _numberOfChunks);
+    vector<int> results(chunkRanges.size());
+    vector<int> *resPtr = &results;
+    WCM wcm(_data, &chunkRanges, _nthreads, resPtr, _mapper, _reducer);
+    return wcm.process();;
 };
 
-void MapReduceConfig::RunMapReduce() {
-    vector<vector<int>> chunkRanges = getChuckRanges(_data, _numberOfChunks);
-    
-};
-
-vector<vector<int>> MapReduceConfig::getChuckRanges(vector<int> data, int numberOfChunks) {
+vector<vector<int>> MR::getChuckRanges(vector<int> data, int numberOfChunks) {
     vector<vector<int>> chunks;
     int chunkSize = data.size() / numberOfChunks;
     int residue = data.size() - numberOfChunks * chunkSize;

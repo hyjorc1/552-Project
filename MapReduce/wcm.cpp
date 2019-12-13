@@ -152,12 +152,12 @@ vector<int> WCM::process_taskqueue(taskqueue *tasks, int n)
     return res;  
 };
 
-
-
 // public 
 WCM::WCM(vector<int> *data, vector<vector<int>> *chunkRanges, int nthreads, vector<int> *results, int (*mapper)(int), int (*reducer)(int, int))
 {
-    this->tasks = setTaskQueue(data, chunkRanges, results, mapper, reducer);
+    this->tasks = WCM::setTaskQueue(data, chunkRanges, results, mapper, reducer);
+    if (debug > 0)
+        write_taskqueue(tasks);
     this->nthreads = nthreads;
 };
 
