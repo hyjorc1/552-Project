@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 
     auto start = high_resolution_clock::now();
 
+    // *** ------------------ test ------------------ ***
     if (testNum == 1)
     {
         // test 1 int
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
         MR<string, int> mr(&data, nchunks, nthreads, len, max);
         mr.runMapReduce(true);
     }
+    // *** ------------------------------------------- ***
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
