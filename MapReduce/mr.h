@@ -17,7 +17,7 @@ private:
 public:
     MR(std::vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), U (*reducer)(U, U));
 
-    U RunMapReduce(bool debug);
+    U runMapReduce(bool debug);
 };
 
 template <typename T, typename U>
@@ -31,7 +31,7 @@ MR<T, U>::MR(vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), 
 };
 
 template <class T, class U>
-U MR<T, U>::RunMapReduce(bool debug)
+U MR<T, U>::runMapReduce(bool debug)
 {
     vector<vector<int>> chunkRanges = getChuckRanges((*_data).size(), _numberOfChunks);
     vector<U> results(chunkRanges.size());
