@@ -9,20 +9,18 @@ private:
     std::vector<T> *_data;
     int _numberOfChunks;
     int _nthreads;
-    U (*_mapper)
-    (T);
-    U (*_reducer)
-    (U, U);
+    U (*_mapper)(T);
+    U (*_reducer)(U, U);
+
+    std::vector<std::vector<int>> getChuckRanges(int dataSize, int numberOfChunks);
 
 public:
     MR(std::vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), U (*reducer)(U, U));
 
-    std::vector<std::vector<int>> getChuckRanges(int dataSize, int numberOfChunks);
-
-    U RunMapReduce();
+    U RunMapReduce(bool debug);
 };
 
-template <class T, class U>
+template <typename T, typename U>
 MR<T, U>::MR(vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), U (*reducer)(U, U))
 {
     this->_data = data;
@@ -33,13 +31,15 @@ MR<T, U>::MR(vector<T> *data, int numberOfChunks, int nthreads, U (*mapper)(T), 
 };
 
 template <class T, class U>
-U MR<T, U>::RunMapReduce()
+U MR<T, U>::RunMapReduce(bool debug)
 {
     vector<vector<int>> chunkRanges = getChuckRanges((*_data).size(), _numberOfChunks);
     vector<U> results(chunkRanges.size());
     vector<U> *resPtr = &results;
     WCM<T, U> wcm(_data, &chunkRanges, _nthreads, resPtr, _mapper, _reducer);
+    wcm.setDebugMode(debug);
     U result = wcm.process();
+    printf("*********************************\n");
     printf("Final Result: %s\n", toString(result).c_str());
     return result;
 };

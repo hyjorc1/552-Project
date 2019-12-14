@@ -8,8 +8,6 @@
 #include <string>
 using namespace std;
 
-#define debug 1 // debug mode if 1, otherwise 0
-
 pthread_mutex_t task_lock = PTHREAD_MUTEX_INITIALIZER;
 
 template <typename T, typename U>
@@ -22,6 +20,8 @@ private:
     TaskQueue *tasks;
 
     int nthreads;
+
+    static bool debug; // debug mode if 1, otherwise 0
 
     TaskQueue *setTaskQueue(std::vector<T> *data, std::vector<std::vector<int>> *chunkRanges, std::vector<U> *results, U (*mapper)(T), U (*reducer)(U, U));
 
@@ -37,6 +37,8 @@ public:
     WCM(std::vector<T> *data, std::vector<std::vector<int>> *chunkRanges, int nthreads, std::vector<U> *results, U (*mapper)(T), U (*reducer)(U, U));
 
     U process();
+
+    static void setDebugMode(bool debug);
 };
 
 // private
@@ -54,6 +56,9 @@ struct WCM<T, U>::TaskQueue
     U (*reducer)
     (U, U); // reducer function
 };
+
+template <class T, class U>
+bool WCM<T, U>::debug = false;
 
 template <class T, class U>
 typename WCM<T, U>::TaskQueue *WCM<T, U>::setTaskQueue(vector<T> *data, vector<std::vector<int>> *chunkRanges, vector<U> *results, U (*mapper)(T), U (*reducer)(U, U))
@@ -90,17 +95,17 @@ void *WCM<T, U>::work(void *args)
         curChunkIdx = -1;
 
         // assign current task and update next task
-        if (debug > 0)
+        if (debug)
             printf("thread %d requests lock ...\n", q->id);
         pthread_mutex_lock(&task_lock);
-        if (debug > 0)
+        if (debug)
             printf("thread %d gets lock ...\n", q->id);
         int *j = q->nextTask;
         if (*j < q->ntasks)
             curChunkIdx = (*j)++;
-        if (debug > 0)
+        if (debug)
             printf("thread %d the next job is %d ...\n", q->id, curChunkIdx);
-        if (debug > 0)
+        if (debug)
             printf("thread %d releases lock ...\n", q->id);
         pthread_mutex_unlock(&task_lock);
 
@@ -110,12 +115,12 @@ void *WCM<T, U>::work(void *args)
         // start to work on the current task
         chunksMapreduce(q, curChunkIdx);
 
-        if (debug > 0)
+        if (debug)
             printf("*** thread %d completed job %d ***\n", q->id, curChunkIdx);
 
     } while (curChunkIdx != -1);
 
-    if (debug > 0)
+    if (debug)
         printf("****** thread %d is finished ******\n", q->id);
 
     return NULL;
@@ -136,14 +141,14 @@ void WCM<T, U>::chunksMapreduce(TaskQueue *q, int curChunkIdx)
     {
         T e = data[i];
 
-        if (debug > 0)
+        if (debug)
             printf("thread %d is working on data point at idx %d with value %s ...\n", q->id, i, toString(e).c_str());
 
         U curResult = mapper(e);
         prevResult = i == chunkRange[0] ? curResult : reducer(prevResult, curResult);
     }
 
-    if (debug > 0)
+    if (debug)
         printf("thread %d done with chunk at idx %d with result %s ...\n", q->id, curChunkIdx, toString(prevResult).c_str());
 
     pthread_mutex_lock(&task_lock);
@@ -198,8 +203,7 @@ template <class T, class U>
 WCM<T, U>::WCM(vector<T> *data, vector<vector<int>> *chunkRanges, int nthreads, vector<U> *results, U (*mapper)(T), U (*reducer)(U, U))
 {
     this->tasks = WCM::setTaskQueue(data, chunkRanges, results, mapper, reducer);
-    if (debug > 0)
-        printTaskQueue(tasks);
+    if (debug) printTaskQueue(tasks);
     this->nthreads = nthreads;
 };
 
@@ -207,4 +211,10 @@ template <class T, class U>
 U WCM<T, U>::process()
 {
     return processMultiThreads(tasks, nthreads);
+};
+
+template <class T, class U>
+void WCM<T, U>::setDebugMode(bool d)
+{
+    debug = d;
 };

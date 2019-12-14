@@ -22,27 +22,27 @@ int main(int argc, char *argv[])
     scanf("%d", &nthreads);
 
     auto start = high_resolution_clock::now();
-    
+
     if (testNum == 1)
     {
         // test 1 int
         vector<int> data = generateData(dataSize, 1);
         MR<int, int> mr(&data, nchunks, nthreads, timesTwo, sum);
-        mr.RunMapReduce();
+        mr.RunMapReduce(false);
     }
     else if (testNum == 2)
     {
         // test 2 double
         vector<double> data = generateData(dataSize, 1.0);
         MR<double, double> mr(&data, nchunks, nthreads, timesThree, sum);
-        mr.RunMapReduce();
+        mr.RunMapReduce(true);
     }
     else
     {
         // test 3 string
         vector<string> data = generateStringData(dataSize);
         MR<string, int> mr(&data, nchunks, nthreads, len, max);
-        mr.RunMapReduce();
+        mr.RunMapReduce(true);
     }
 
     auto stop = high_resolution_clock::now();
